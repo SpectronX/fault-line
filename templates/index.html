@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fault Line — Offline Embedded Debug Copilot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Fault Line — Offline Embedded Debug Copilot</h1>
+        <p class="subtitle">
+          Runs 100% locally on open-source Gemma via Ollama. No cloud. No API key.
+        </p>
+      </header>
+
+      <details class="ollama-help">
+        <summary>Set up Ollama</summary>
+        <p>Install and start <a href="https://ollama.com/download" target="_blank" rel="noreferrer">Ollama</a>, then download the default model:</p>
+        <pre><code>ollama pull gemma3:4b
+ollama serve</code></pre>
+        <p>Keep Ollama running while you use Fault Line. To use another installed model, set <code>OLLAMA_MODEL</code> before starting the app.</p>
+      </details>
+
+      <label for="log">Error / log / fault dump</label>
+      <textarea
+        id="log"
+        rows="14"
+        placeholder="Paste compiler errors, HardFault dumps, UART logs…"
+        spellcheck="false"
+      ></textarea>
+
+      <div class="controls">
+        <label for="board">Board / framework</label>
+        <select id="board">
+          <option>AVR (ATmega328P)</option>
+          <option>STM32 (Blue Pill)</option>
+          <option>ESP32</option>
+          <option>Generic/Unknown</option>
+        </select>
+        <button id="explain" type="button">Explain</button>
+      </div>
+
+      <section id="output" class="empty" aria-live="polite">
+        Paste an error above to get started
+      </section>
+    </main>
+
+    <script>
+      const logEl = document.getElementById("log");
+      const boardEl = document.getElementById("board");
+      const btn = document.getElementById("explain");
+      const output = document.getElementById("output");
+
+      btn.addEventListener("click", async () => {
+        const log = logEl.value.trim();
+        if (!log) {
+          output.className = "error";
+          output.textContent = "Paste an error, log, or fault dump first.";
+          return;
+        }
+
+        btn.disabled = true;
+        const previousLabel = btn.textContent;
+        btn.textContent = "Thinking locally...";
+        output.className = "pending";
+        output.textContent = "Thinking locally...";
+
+        try {
+          const res = await fetch("/explain", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ log, board: boardEl.value }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            output.className = "error";
+            output.textContent = data.error || "Request failed (" + res.status + ")";
+            return;
+          }
+          output.className = "";
+          output.textContent = data.explanation || "(empty explanation)";
+        } catch (err) {
+          output.className = "error";
+          output.textContent = err.message || "Network error";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = previousLabel;
+        }
+      });
+    </script>
+  </body>
+</html>
