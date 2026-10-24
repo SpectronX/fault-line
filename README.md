@@ -2,6 +2,14 @@
 
 Fault Line is a local web app that explains embedded systems errors, fault dumps, compiler output, and logs using a model served by Ollama.
 
+## What we're solving
+
+Embedded and firmware debugging often starts with cryptic output: fault register dumps, linker errors, or compiler messages that take deep datasheet knowledge or hours of forum searching to decode. That knowledge bottleneck slows down beginners and experienced developers alike, especially when they are working outside their usual microcontroller family.
+
+Fault Line turns that lookup and reasoning step into one paste-and-explain action. It runs locally through Ollama, so it can work without a reliable internet connection and keeps debugging data on your device. The default Gemma model uses open weights, making the model pipeline inspectable and forkable.
+
+The goal is not simply to have AI explain errors. Fault Line focuses on embedded debugging and combines that domain focus with local execution and open weights, rather than relying on a closed cloud API.
+
 ## Requirements
 
 - Python 3.10 or later
